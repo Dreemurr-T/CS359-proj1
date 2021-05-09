@@ -1,8 +1,13 @@
+# 519021911174, Haoyuan Tian
+# 519021910529, Qi Liu
+
 # Execution begins at address 0 
 	.pos 0 
 init:	
-    irmovl Stack, %esp  	# Set up stack pointer  
-	call Main		# Execute Main program
+    irmovl Stack, %esp      # Set up stack pointer 
+    irmovl Stack, %ebp      # Set up stack frame pointer 
+    call Main               
+    halt                    # Terminate the program
 
 .align 4
 # Source block
@@ -18,42 +23,49 @@ dest:
 
 Main:	
     pushl %ebp
-	rrmovl %esp,%ebp          # Set up pop pointer
+	rrmovl %esp,%ebp
 	irmovl $3,%eax  
-	pushl %eax  # push len
+	pushl %eax              # push len
     irmovl src,%eax
-    pushl %eax   # push src
+    pushl %eax              # push src
     irmovl dest,%eax
-    pushl %eax  # push dest
-    xorl %eax,%eax  # set eax as result
+    pushl %eax              # push dest
+    xorl %eax,%eax          # set result = 0
 	call copy_block
-    halt	# Terminate the program
+    rrmovl %ebp,%esp
+	popl %ebp
+	ret
 
 # copy_block
 copy_block:	
     pushl %ebp
 	rrmovl %esp,%ebp
-	mrmovl 16(%ebp), %ebx  # %ebx = len
-    mrmovl 12(%ebp), %ecx  # %ecx = src
-    mrmovl 8(%ebp), %edx   # %edx = dest
+    pushl %ebx
+    pushl %ecx
+    pushl %edx
+	mrmovl 16(%ebp), %ebx   # %ebx = len
+    mrmovl 12(%ebp), %ecx   # %ecx = src
+    mrmovl 8(%ebp), %edx    # %edx = dest
 
 Loop:
-    mrmovl (%ecx), %esi    # val = *src
+    mrmovl (%ecx), %esi     # val = *src
     irmovl $4,%edi
-    addl %edi, %ecx    # *src += 1
-    rmmovl %esi, (%edx)    # *dest = val
-    addl %edi,%edx     # *val += 1
-    xorl %esi, %eax      # result ^= val
+    addl %edi, %ecx         # *src += 1
+    rmmovl %esi, (%edx)     # *dest = val
+    addl %edi,%edx          # *val += 1
+    xorl %esi, %eax         # result ^= val
     irmovl $-1, %edi
-    addl %edi, %ebx      # len -= 1
-    andl %ebx, %ebx      # len > 0?
+    addl %edi, %ebx         # len -= 1
+    andl %ebx, %ebx         # len > 0?
     jne Loop
 
 End:	
+    popl %edx               # restore registers 
+    popl %ecx
+    popl %ebx
     rrmovl %ebp,%esp
 	popl %ebp
 	ret
-
 
 # The stack starts here and grows to lower addresses
 	.pos 0x200	

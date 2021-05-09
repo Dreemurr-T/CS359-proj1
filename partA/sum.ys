@@ -1,9 +1,13 @@
+# 519021911174, Haoyuan Tian
+# 519021910529, Qi Liu
+
 # Execution begins at address 0 
 	.pos 0 
 init:	
-    irmovl Stack, %esp  	# Set up stack pointer  
-	call Main		# Execute Main program
-
+    irmovl Stack, %esp  	    # Set up stack pointer
+    irmovl Stack, %ebp          # Set up stack frame pointer
+	call Main		            # Execute Main program
+    halt                        # Terminate the program
 
 # Sample linked list
     .align 4
@@ -18,31 +22,33 @@ init:
         .long 0
 
 Main:	
-	rrmovl %esp,%ebp          # Set up pop pointer
-	irmovl ele1,%eax	
-	pushl %eax		# Push ele1
-	call Sum_list
-    halt	# Terminate the program
-
-# Sum_list func
-Sum_list:	
     pushl %ebp
 	rrmovl %esp,%ebp
-	mrmovl 8(%ebp),%ecx 	# %ecx = ls, for now it's ele1
-	xorl %eax,%eax		# sum = 0
-
-Loop:	
-    mrmovl (%ecx),%edx	 # get ls->val
-	addl %edx,%eax          # add to sum
-	mrmovl $4(%ecx),%ecx          # ls = ls->next
-	andl %ecx,%ecx  # ecx == 0?
-    jne Loop
-
-End:	
-    rrmovl %ebp,%esp
+	irmovl ele1,%eax	
+	pushl %eax		            # Push ele1
+	call sum_list
+    rrmovl %ebp,%esp            # Restore the frame pointer
 	popl %ebp
 	ret
+    	
+# sum_list func
+sum_list:	
+    pushl %ebp
+	rrmovl %esp,%ebp
+	mrmovl 8(%ebp),%ecx 	    # %ecx = ls, for now it's ele1
+	xorl %eax,%eax		        # sum = 0
 
+Loop:	
+    mrmovl (%ecx),%edx          # get ls->val
+	addl %edx,%eax              # add to sum
+	mrmovl $4(%ecx),%ecx        # ls = ls->next
+	andl %ecx,%ecx              # ecx == 0?
+    jne Loop                    # If not so, goto Loop
+
+End:	
+    rrmovl %ebp,%esp            # return to Main
+	popl %ebp
+	ret
 
 # The stack starts here and grows to lower addresses
 	.pos 0x200	
